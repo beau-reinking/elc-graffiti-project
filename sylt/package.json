@@ -1,0 +1,21 @@
+{
+  "name": "sylt",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "start": "node server.mjs",
+    "build": "vite build",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "@graffiti-garden/implementation-decentralized": "0.4.0",
+    "lucide": "^0.468.0"
+  },
+  "devDependencies": {
+    "vite": "^6.1.0",
+    "@graffiti-garden/implementation-local": "1.5.0",
+    "fake-indexeddb": "^6.2.4"
+  }
+}

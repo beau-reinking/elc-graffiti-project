@@ -1,0 +1,13 @@
+# Web/native boundaries
+
+`workspace/src/platform.js` chooses the processor at build time. The browser branch imports FFmpeg.wasm; the native branch imports the loopback adapter. The static build scans JavaScript output for native session/clip endpoints and bridge dependencies. The editor only calls `prepare(source, {start,end,signal,onProgress})`; the processor owns transport, probing, encoding, cancellation and resource cleanup.
+
+The browser loads a versioned gzip `.bin`, decompresses with DecompressionStream, verifies raw SHA-256/size, and passes a Blob WASM URL to the self-hosted worker/core. Single-threaded encoding avoids cross-origin isolation. One job is allowed; disposal/account switch terminates the worker, clears its in-memory filesystem and revokes the WASM URL. The editor revokes source and preview URLs. Ten-minute timeout is recoverable. Long audio waveforms accumulate during preview instead of decoding the entire recording for visualization.
+
+The core's ffprobe may return -1 even after successfully writing JSON. Probing validates the generated JSON and media streams rather than treating -1 alone as failure. Packet timestamps supply missing WebM durations. Exported bytes are probed and opened by the browser before the preview-gated draft action becomes available.
+
+Private trim checkpoints and operation identifiers use the existing Sylt namespace. Existing public excerpt/private lineage/removal contracts are retained, and only the selected clip is republished publicly after consent. Existing three-sample limits and total-reification rules are unchanged.
+
+OurScene adds `music-venues:v1:event-submissions` (restricted records) and `music-venues:v1:approved-community-events` (public reviewer decisions). Object.actor is authoritative. The public reader ignores decisions not authored by the configured reviewer; approved snapshots are validated with the existing MusicEvent/VenueProfile models and clearly labeled community submissions. A terminal withdrawn decision suppresses any approval for the same author/operation key. Existing venue-owned event channels and authorization remain unchanged. An approved community location is a projection of a reviewer-authored record, not a claimed venue-owner identity.
+
+Public discovery remains open. Generic venue pages accept actual Graffiti actor URIs and discover that actor's authored profile. All apps remain same-origin isolated documents. Shared identity defaults OurScene to the personal actor; explicit owner authentication retains its separate context. Account switching disposes child frames and media jobs; late operations are invalidated. No credentials or authentication state are moved between browsers.

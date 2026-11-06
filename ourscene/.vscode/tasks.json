@@ -1,0 +1,9 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    { "label": "Start shared local sandbox", "type": "npm", "script": "dev:sandbox", "isBackground": true, "problemMatcher": [] },
+    { "label": "Start all independent apps", "type": "npm", "script": "dev:all", "isBackground": true, "problemMatcher": [] },
+    { "label": "Test architecture", "type": "npm", "script": "test", "group": "test", "problemMatcher": [] },
+    { "label": "Build all apps", "type": "npm", "script": "build", "group": "build", "problemMatcher": ["$tsc"] }
+  ]
+}

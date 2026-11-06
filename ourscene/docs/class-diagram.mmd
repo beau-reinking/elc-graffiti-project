@@ -1,0 +1,116 @@
+classDiagram
+ direction TB
+ class VenueAppController
+ class VenuePublishingService
+ class EventPublishingService
+ class CommunityView
+ class CommunityService
+ class SessionIdentityPort {
+  <<interface>>
+  +loginVisitor()
+  +loginOwner()
+  +selectSession(actor)
+ }
+ class CommunityReader {
+  <<interface>>
+  +observeCommunity(venueActor, listener)
+ }
+ class CommunityWriter {
+  <<interface>>
+  +publish(value, session)
+  +remove(record, marker, session)
+ }
+ class UsernameReader {
+  <<interface>>
+  +observeUsernames(listener)
+ }
+ class UsernameWriter {
+  <<interface>>
+  +claim(value, session)
+ }
+ class UsernameClaim
+ class CommunityRecord
+ class CommunityProjection {
+  +posts: ThreadNode[]
+  +diagnostics: string[]
+ }
+ class ThreadNode {
+  +ref: ContentRef
+  +removed: boolean
+  +hidden: boolean
+  +children: ThreadNode[]
+ }
+ class AggregatorController
+ class FeedService
+ class FeedStore
+ class EventExplorerState {
+  +setFilters(change)
+  +project()
+ }
+ class EventExplorerView
+ class FeedView {
+  <<interface>>
+  +render(snapshot)
+  +dispose()
+ }
+ class EventMapAdapter {
+  <<interface>>
+ }
+ class LeafletMapAdapter
+ class EventDetailView
+ class VenueProfile {
+  +appUrl: HTTPS URL
+  +address: string
+  +location: GeoPoint
+ }
+ class MusicEvent {
+  +eventId: string
+  +genres: Genre[]
+  +tickets: TicketInput
+ }
+ class GraffitiCommunityRepository
+ class GraffitiIdentityAdapter
+ class GraffitiObservation
+ class GraffitiEventRepository
+ class DiscussionNavigation
+ class GraffitiClient {
+  <<external>>
+ }
+ VenueAppController --> VenuePublishingService
+ VenueAppController --> EventPublishingService
+ CommunityView --> CommunityService
+ CommunityView --> SessionIdentityPort
+ CommunityService --> CommunityReader
+ CommunityService --> CommunityWriter
+ CommunityService --> UsernameReader
+ CommunityService --> UsernameWriter
+ CommunityService --> CommunityProjection : domain projection
+ CommunityService --> UsernameClaim : domain claim resolution
+ CommunityProjection o-- ThreadNode
+ ThreadNode o-- CommunityRecord
+ CommunityView ..> FeedStore : event snapshots via composition
+ GraffitiIdentityAdapter ..|> SessionIdentityPort
+ GraffitiCommunityRepository ..|> CommunityReader
+ GraffitiCommunityRepository ..|> CommunityWriter
+ GraffitiCommunityRepository ..|> UsernameReader
+ GraffitiCommunityRepository ..|> UsernameWriter
+ GraffitiCommunityRepository --> GraffitiObservation
+ GraffitiCommunityRepository --> GraffitiClient
+ GraffitiIdentityAdapter --> GraffitiClient
+ GraffitiEventRepository --> GraffitiObservation
+ AggregatorController --> FeedService
+ AggregatorController --> FeedStore
+ AggregatorController --> FeedView
+ EventExplorerView ..|> FeedView
+ EventExplorerView --> EventExplorerState
+ EventExplorerView --> EventDetailView
+ EventExplorerView --> EventMapAdapter
+ LeafletMapAdapter ..|> EventMapAdapter
+ EventDetailView ..> DiscussionNavigation : injected URL function
+ DiscussionNavigation --> VenueProfile : discovered app URL
+ DiscussionNavigation --> MusicEvent : stable event ID
+ FeedService --> GraffitiEventRepository : EventReader port
+ FeedService --> FeedStore
+ FeedStore o-- MusicEvent
+ FeedStore o-- VenueProfile
+ EventPublishingService --> GraffitiEventRepository : EventWriter port

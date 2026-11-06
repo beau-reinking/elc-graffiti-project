@@ -1,0 +1,12 @@
+{
+  "commit": "REPLACE_WITH_TESTED_COMMIT",
+  "providerLimitsReviewedAt": "",
+  "correspondingSourceUrl": "",
+  "encoder": [],
+  "realAccounts": [],
+  "regressionPassed": false,
+  "typescriptPassed": false,
+  "licenseReviewPassed": false,
+  "moderatorDeliveryPassed": false,
+  "productionSmokePassed": false
+}

@@ -1,0 +1,67 @@
+sequenceDiagram
+ actor Visitor
+ participant Soundboard
+ participant Filter as EventExplorerState
+ participant Detail as Event details
+ participant Venue as Venue community UI
+ participant Identity as Identity adapter
+ participant Service as CommunityService
+ participant Domain as Claim / thread rules
+ participant Repo as Graffiti adapters
+ participant G as Shared Graffiti
+ actor Owner
+ Visitor->>Soundboard: Choose dates, genres and price
+ Soundboard->>Filter: setFilters(change)
+ Filter-->>Soundboard: Shared list / pin / thumbnail projection
+ Visitor->>Detail: Open event
+ Detail-->>Visitor: Address, schedule, artwork and conversation link
+ Visitor->>Venue: Follow discovered appUrl + stable event ID
+ Venue->>Service: Start venue and username observations
+ Service->>Repo: observeCommunity(), observeUsernames()
+ Repo->>G: Discover channels
+ G-->>Repo: Records, cursor and source warnings
+ Repo-->>Service: Domain records and source health
+ Service->>Domain: Resolve names and nested thread ancestry
+ Domain-->>Venue: Event collection, public authors, threads
+ Visitor->>Identity: Visitor sign in / select restored account
+ Identity-->>Venue: Session state, no rendered actor IDs
+ opt No winning username
+  Visitor->>Service: Choose username
+  Service->>Repo: Refresh username discovery
+  Repo-->>Service: Complete discovery or stale warning
+  Service->>Domain: Normalize and check current claims
+  alt Complete discovery and name available
+   Service->>Repo: Publish UsernameClaim
+   Repo->>G: post(claim, session)
+   Service->>Domain: Reconcile deterministic conflicts
+  else Stale discovery / taken name
+   Service-->>Visitor: Retry or choose another name
+  end
+ end
+ Visitor->>Service: Publish post with optional event tag / HTTPS photo
+ Service->>Domain: Validate name, content and venue event
+ Service->>Repo: publish(record, author session)
+ Repo->>G: post to venue community channel
+ Service-->>Venue: Refresh and render immediately
+ Visitor->>Service: Reply to post or reply
+ Service->>Domain: Validate root and parent ancestry
+ Service->>Repo: Publish reply with root and parent refs
+ Owner->>Identity: Venue owner sign in
+ Owner->>Service: Hide / restore subtree
+ Service->>Repo: Publish venue-authored moderation
+ Repo->>G: post(moderation, owner session)
+ Service->>Domain: Verify actual author is venue owner
+ Domain-->>Venue: Visitors omit subtree; owner may restore
+ Visitor->>Service: Delete own post / reply
+ Service->>Repo: Publish terminal author-removal marker
+ Repo->>G: post structural removal, then delete content object
+ Repo-->>Service: Cleanup warnings if any
+ Service->>Domain: Preserve content-free ancestors with surviving replies
+ loop Every 30 seconds while visible / manual refresh
+  Repo->>G: continueDiscover(cursor)
+  G-->>Repo: Changes, tombstones and next cursor
+  Repo-->>Service: Reconciled records, retained cache and source health
+  Service-->>Venue: Updated names and conversation
+ end
+ Note over Repo,G: Expired cursor: fresh reconciliation. Failure: preserve cache and mark stale.
+ Note over Soundboard,Venue: Soundboard never subscribes to community feeds. It links to the venue app.
