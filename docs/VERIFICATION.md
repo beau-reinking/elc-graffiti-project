@@ -13,15 +13,21 @@
 - Existing remote repository history and GPL-3.0 license preserved. User requested the existing public visibility, replacing the private-source default.
 - Native bundle builds and is ad-hoc signed and verified. Its tools are bundled without Homebrew runtime lookup. The original delivered application remains unchanged.
 
+## Hosted staging
+
+https://gt-graffiti-workspace-staging.pages.dev/ is deployed through Cloudflare Git integration from `web-launch`. Downloaded encoder integrity passes: 10,257,774 compressed bytes, 32,232,419 decompressed bytes, SHA-256 matches the manifest. No HTTP content-encoding is applied to the `.bin` payload. Required security headers are present and global cross-origin isolation is absent. A hosted synthetic 60-second AAC export passed in the built-in browser (about 2.2 seconds including first encoder loading); this is not the four-platform performance gate.
+
+The first hosted smoke test found app-route refreshes returning 404 despite working local previews. The release build now emits real workspace documents at the three canonical app routes; `verify:host` asserts actual HTTPS responses rather than assuming the host matches the preview server.
+
 ## Not yet passed
 
-- Staging/production Cloudflare deployment and actual hosted compressed-asset/CSP/auth callback checks.
+- Production deployment; hosted real-provider authentication/callback and account-isolation checks.
 - Current full Chrome and Firefox on both macOS and Windows; reference 8 GB laptop, five-minute 1080p source, three consecutive 60-second exports under ten minutes, active-worker cancellation and memory stress.
 - Hosted real two-account musician flow and third-account isolation; report delivery and reviewer identity match; event review delivery on the real backend.
 - Complete encoder corresponding-source distribution review and provider storage/limits confirmation.
 - Production smoke test and rollback rehearsal.
 
-Do not promote a production release on the strength of the local tests alone. No staging or production URL is recorded until actually deployed. `release:check` remains blocked without genuine evidence.
+Do not promote a production release on the strength of the local tests alone. The staging URL above is real; no production release is claimed. `release:check` remains blocked without genuine evidence.
 
 ## Dependency advisory review
 

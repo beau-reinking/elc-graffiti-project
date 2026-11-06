@@ -5,6 +5,7 @@ import {createHash} from 'node:crypto';
 import {fileURLToPath} from 'node:url';
 import path from 'node:path';
 import {configuration} from './config.mjs';
+import {writeWorkspaceRoutes} from './routes.mjs';
 const root=fileURLToPath(new URL('../',import.meta.url)),profile=process.argv[2]||'production';
 if(!['production','staging','preview'].includes(profile))throw Error('Unknown build profile.');
 for(const name of ['FFMPEG-WRAPPER-MIT.txt','FFMPEG-CORE-GPL-2.0.txt','ENCODER-SOURCE.md','DMSANS-OFL.txt','MANROPE-OFL.txt'])if((await stat(path.join(root,'licenses',name))).size<100)throw Error(`Missing dependency notice: ${name}`);
@@ -25,12 +26,10 @@ await cp(path.join(core,'package.json'),path.join(encoder,'core-package.json'));
 await cp(path.join(workspace,'node_modules/@ffmpeg/ffmpeg/package.json'),path.join(encoder,'wrapper-package.json'));
 await cp(path.join(root,'licenses'),path.join(out,'licenses'),{recursive:true});
 for(const name of ['privacy','agreement']){await mkdir(path.join(out,name),{recursive:true});await cp(path.join(out,`legal/${name}.html`),path.join(out,name,'index.html'));}
-const redirects=['/yudo /yudo/ 301','/yudo/ /index.html 200','/sylt /sylt/ 301','/sylt/ /index.html 200','/ourscene /ourscene/ 301','/ourscene/ /index.html 200'];
-for(const [old,next]of Object.entries({soundcheck:'yudo',encore:'sylt','music-venues':'ourscene',soundboard:'ourscene'})){redirects.push(`/${old} /${next}/ 302`,`/${old}/ /${next}/ 302`,`/${old}/* /${next}/:splat 302`);}
-await writeFile(path.join(out,'_redirects'),redirects.join('\n')+'\n');
+await writeWorkspaceRoutes(out);
 await writeFile(path.join(out,'_headers'),`/*\n  Content-Security-Policy: default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src 'self' data: blob:; img-src 'self' data: blob: https:; media-src 'self' blob: https:; connect-src 'self' blob: https: wss:; worker-src 'self' blob:; frame-src 'self' https:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self' https:\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Permissions-Policy: camera=(self), microphone=(self), geolocation=(self)\n/encoder/ffmpeg-core-*\n  Cache-Control: public, max-age=31536000, immutable\n/encoder/manifest.json\n  Cache-Control: no-cache\n`);
 await writeFile(path.join(out,'404.html'),'<!doctype html><html lang="en"><meta charset="utf-8"><title>Page unavailable</title><h1>Page unavailable</h1><p><a href="/">Open GT Graffiti</a></p></html>');
-await writeFile(path.join(out,'release.json'),JSON.stringify({version:'1.1.0',profile,builtAt:new Date().toISOString(),encoder:{wrapper:'0.12.15',core:'0.12.10'},preview:profile==='preview'}));
+await writeFile(path.join(out,'release.json'),JSON.stringify({version:'1.1.0',profile,commit:process.env.CF_PAGES_COMMIT_SHA||spawnSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).stdout?.trim()||'uncommitted',builtAt:new Date().toISOString(),encoder:{wrapper:'0.12.15',core:'0.12.10'},preview:profile==='preview'}));
 if(!(await readdir(path.join(out,'assets'))).some(name=>/^worker-.*\.js$/.test(name)))throw Error('Missing encoder worker.');
 let count=0;async function check(dir){for(const item of await readdir(dir,{withFileTypes:true})){const file=path.join(dir,item.name);if(item.isDirectory()){await check(file);continue;}count++;const size=(await stat(file)).size;if(size>25*1024*1024)throw Error(`Pages asset exceeds 25 MiB: ${file}`);if(file.endsWith('.js')){const text=await readFile(file,'utf8');if(/\/api\/(session|clips)|127\.0\.0\.1:5178|messageHandlers\??\.gtWorkspace/.test(text))throw Error(`Native dependency in web output: ${file}`);}}}await check(out);if(count>20000)throw Error('Pages Free file-count limit exceeded.');
 console.log(`Built ${profile}: ${count} files; compressed encoder ${(gzipSync(wasm).length/1024/1024).toFixed(2)} MiB. No native clip API dependencies.`);

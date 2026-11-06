@@ -22,7 +22,7 @@ npm run build:staging
 npm run build:web
 ```
 
-The output is `dist-web/`. A successful build is **not** proof that release gates passed. Run `npm run release:check` against the tested commit and complete `docs/ACCEPTANCE.md` before public promotion. No staging or production URL has been created in this checkout.
+The output is `dist-web/`. A successful build is **not** proof that release gates passed. Run `npm run release:check` against the tested commit and complete `docs/ACCEPTANCE.md` before public promotion. Staging is available at https://gt-graffiti-workspace-staging.pages.dev/. Production promotion remains pending the acceptance gates.
 
 ## What is included
 

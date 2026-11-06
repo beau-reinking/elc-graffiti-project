@@ -14,7 +14,7 @@ Use the repository root as build root, Node 24.15.0, build command `npm run setu
 
 Because actual `release.config.json` is intentionally ignored, set the **public** environment variable `GT_RELEASE_CONFIG` to the JSON from `release.config.example.json` in both Pages projects. All configuration is public; never put credentials in it. The build validates and injects the moderator into Yudo and OurScene. Optional venue navigation may be configured later. Two real venue owners are no longer a prerequisite: the project owner changed this to moderator-approved community submissions.
 
-The build pins the Graffiti and FFmpeg dependencies, checks 25 MiB per asset and 20,000 files, and creates explicit routes, aliases, `_headers`, `_redirects`, and a root 404. Missing scripts/encoder assets must return 404, never workspace HTML. Original query parameters on aliases remain intact. Cloudflare currently documents 500 builds/month on Free; that account quota cannot be measured by a source build, so record the dashboard count in release evidence and stay below it. Do not represent an artifact-size check as a monthly-quota check.
+The build pins the Graffiti and FFmpeg dependencies, checks 25 MiB per asset and 20,000 files, and creates physical workspace shell documents at each canonical route, aliases, `_headers`, `_redirects`, and a root 404. Missing scripts/encoder assets must return 404, never workspace HTML. Original query parameters on aliases remain intact. Cloudflare currently documents 500 builds/month on Free; that account quota cannot be measured by a source build, so record the dashboard count in release evidence and stay below it. Do not represent an artifact-size check as a monthly-quota check.
 
 ## Encoder and notices
 
@@ -35,3 +35,5 @@ Official references:
 - https://developers.cloudflare.com/pages/configuration/git-integration/
 - https://developers.cloudflare.com/pages/configuration/serving-pages/
 - https://developers.cloudflare.com/pages/configuration/rollbacks/
+
+The canonical app paths have real copies of the workspace document with absolute asset URLs. This avoids Pages HTML normalization affecting index.html proxy rules, while absent assets still return 404. After every staging release, run `npm run verify:host -- https://gt-graffiti-workspace-staging.pages.dev` to assert actual route statuses, redirects, headers and decompressed encoder integrity.
