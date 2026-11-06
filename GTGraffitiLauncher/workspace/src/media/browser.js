@@ -30,7 +30,7 @@ export class BrowserClipProcessor{
   const check=()=>{if(controller.signal.aborted)throw abortError();};
   try{
    check();onProgress({stage:'loading-encoder'});
-   const response=await fetch('/encoder/manifest.json',{signal:controller.signal,cache:'force-cache'});if(!response.ok)throw Error('The encoder manifest is unavailable.');
+   const response=await fetch('/encoder/manifest.json',{signal:controller.signal,cache:'no-cache'});if(!response.ok)throw Error('The encoder manifest is unavailable.');
    const manifest=await response.json();if(manifest.coreVersion!=='0.12.10'||manifest.wrapperVersion!=='0.12.15'||!/^[a-f0-9]{64}$/.test(manifest.sha256)||!/^\/encoder\/[a-zA-Z0-9._-]+$/.test(manifest.compressedPath)||!/^\/encoder\/[a-zA-Z0-9._-]+\.js$/.test(manifest.coreJSPath))throw Error('The encoder manifest is invalid.');
    const compressed=await download(manifest.compressedPath,controller.signal,onProgress);check();
    const bytes=await new Response(new Blob([compressed]).stream().pipeThrough(new DecompressionStream('gzip'))).arrayBuffer();check();

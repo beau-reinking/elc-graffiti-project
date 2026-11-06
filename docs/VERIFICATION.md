@@ -9,7 +9,7 @@
 - The pinned WASM core exports beginning/middle/end audio intervals from a five-minute source. Actual duration, size and AAC codec are checked.
 - Browser UI in the built-in browser: parent/app Blob upload and playback conversion; cancellation before preparation; exactly 60 seconds of audio exported and opened as AAC M4A; browser-recorded silent WebM exported as playable two-second MP4. These are synthetic fixtures, not real Graffiti publications. Audio processing was about 0.7 seconds for a low-resolution generated tone; video about 0.6 seconds for a 320×240 generated source. These timings do **not** establish 1080p feasibility.
 - Full workspace UI: public OurScene starts without fictional navigation; explicit local demo restores the shared actor; pending event stays out of the feed, approval appears after reconciliation, withdrawal removes it. No fabricated event was published to production Graffiti.
-- Browser testing caught and fixed core ffprobe's successful `-1` return, restored-session listener ordering in the demo, and overlapping event refreshes that duplicated inbox cards.
+- Browser testing caught and fixed core ffprobe's successful `-1` return, restored-session listener ordering in the demo, overlapping event refreshes that duplicated inbox cards, and stale encoder manifests after a build update. Manifests now revalidate while checksum-versioned encoder assets remain cacheable.
 - Existing remote repository history and GPL-3.0 license preserved. User requested the existing public visibility, replacing the private-source default.
 - Native bundle builds and is ad-hoc signed and verified. Its tools are bundled without Homebrew runtime lookup. The original delivered application remains unchanged.
 

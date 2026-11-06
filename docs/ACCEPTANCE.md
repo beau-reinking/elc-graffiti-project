@@ -8,7 +8,7 @@ On current Chrome and Firefox, on both Windows and macOS, use a documented lapto
 
 Test MP4/WebM, portrait, variable frame rate, silent video, audio, browser-recorded WebM without a duration header, start/middle/end intervals, exactly 60 seconds, invalid/overlong/out-of-bounds intervals, malformed/unsupported files and memory failure. Verify no source content outside the selected interval, actual duration/size, no upscaling, playable output and zeroed timeline. Do not silently replace failed browser processing with a paid backend.
 
-`/qa.html` exists only in the preview build. It tests same-origin parent/child Blob conversions, pre-cancellation, exact-60-second audio and browser-recorded WebM → MP4. It is a narrow engineering aid, not the four-platform feasibility gate.
+`/qa.html` exists only in staging and preview builds. It tests same-origin parent/child Blob conversions, pre-cancellation, exact-60-second audio and browser-recorded WebM → MP4. It is a narrow engineering aid, not the four-platform feasibility gate.
 
 ## B. Regression
 

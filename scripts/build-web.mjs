@@ -9,7 +9,7 @@ const root=fileURLToPath(new URL('../',import.meta.url)),profile=process.argv[2]
 if(!['production','staging','preview'].includes(profile))throw Error('Unknown build profile.');
 for(const name of ['FFMPEG-WRAPPER-MIT.txt','FFMPEG-CORE-GPL-2.0.txt','ENCODER-SOURCE.md','DMSANS-OFL.txt','MANROPE-OFL.txt'])if((await stat(path.join(root,'licenses',name))).size<100)throw Error(`Missing dependency notice: ${name}`);
 const config=await configuration(profile),workspace=path.join(root,'GTGraffitiLauncher/workspace'),out=path.join(root,'dist-web');
-function run(dir,args,env={}){const r=spawnSync(process.execPath,args,{cwd:path.join(root,dir),stdio:'inherit',env:{...process.env,...env,GT_WEB_BUILD:'1',GT_LAUNCH_VENUES:JSON.stringify(config.venues),GT_RELEASE_PREVIEW:String(profile==='preview'),VITE_MODERATOR_ACTOR:config.moderatorActor||'',VITE_GRAFFITI_MODE:'decentralized'}});if(r.status!==0)throw Error(`Build failed in ${dir}`);}
+function run(dir,args,env={}){const r=spawnSync(process.execPath,args,{cwd:path.join(root,dir),stdio:'inherit',env:{...process.env,...env,GT_WEB_BUILD:'1',GT_LAUNCH_VENUES:JSON.stringify(config.venues),GT_RELEASE_PREVIEW:String(profile!=='production'),VITE_MODERATOR_ACTOR:config.moderatorActor||'',VITE_GRAFFITI_MODE:'decentralized'}});if(r.status!==0)throw Error(`Build failed in ${dir}`);}
 await rm(out,{recursive:true,force:true});
 run('GTGraffitiLauncher/workspace',['node_modules/vite/bin/vite.js','build','--mode','web','--outDir',out,'--emptyOutDir']);
 for(const app of ['yudo','sylt']){run(app,['node_modules/vite/bin/vite.js','build','--mode','web',`--base=/apps/${app}/`]);await cp(path.join(root,app,'dist'),path.join(out,'apps',app),{recursive:true});}
