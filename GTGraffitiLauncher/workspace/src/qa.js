@@ -1,3 +1,4 @@
+import {selectClip} from './clip-editor.js';
 import {BrowserClipProcessor} from './media/browser.js';
 import {SharedIdentity} from './identity.js';
 const results=document.querySelector('#results'),processor=new BrowserClipProcessor();let controller,previewUrl;
@@ -38,4 +39,26 @@ action(document.querySelector('#malformed'),async()=>{
  log('PASS overlong, empty and negative selections rejected');
  try{await processor.prepare(new Blob(['not a media file'],{type:'video/mp4'}),{start:0,end:1,signal:new AbortController().signal});throw Error('Malformed media unexpectedly succeeded');}catch(e){if(!/could not be read|supported audio or video|Cannot establish this recording/i.test(e.message))throw e;log('PASS malformed media rejected with recoverable error');}
  await run(tone(3),0,2);log('PASS valid retry after malformed media');
+});
+
+action(document.querySelector('#editor-lifecycle'),async()=>{
+ const host=document.createElement('div'),root=document.createElement('div');host.id='dialogs';root.id='workspace';document.body.append(host,root);
+ const source={url:'synthetic:source',value:{title:'Synthetic lifecycle test',duration:5,mediaType:'audio/wav',type:'practice',media:'synthetic:media'}};
+ const service={actor:'synthetic:test',session:{actor:'synthetic:test'},async recordings(){return [source]},async source(){return source},api:{async getMedia(){return {data:tone(5)}}},async savedSelection(){return null},async saveSelection(){}};
+ const workspace={epoch:0,crosspost:()=>service,processor:{async prepare(blob,{start,end}){const output=tone(end-start);return {blob:output,duration:end-start,size:output.size,exportRevision:'synthetic-lifecycle'}}}};
+ const before=sessionStorage.getItem('gt:clip-selection');let pending;
+ const until=async check=>{const deadline=performance.now()+5000;while(!check()){if(performance.now()>deadline)throw Error('Editor lifecycle check timed out');await new Promise(resolve=>setTimeout(resolve,20));}};
+ try{
+  pending=selectClip(workspace,{sourceUrl:source.url});await until(()=>host.querySelector('#prepare-clip'));
+  const dialog=host.querySelector('dialog');dialog.querySelector('#prepare-clip').click();await until(()=>dialog.querySelector('#clip-preview'));
+  const first=dialog.querySelector('#clip-preview'),firstUrl=first.src;first.muted=true;await first.play();if(dialog.querySelector('#add-clip').disabled)throw Error('Preview did not enable adding');
+  const end=dialog.querySelector('#clip-end');end.value='4';end.dispatchEvent(new Event('input'));await until(()=>!dialog.querySelector('#clip-preview'));
+  if(!first.paused||first.getAttribute('src'))throw Error('Invalidated preview kept playing or retained its source');
+  let revoked=false;try{await fetch(firstUrl)}catch{revoked=true}if(!revoked)throw Error('Invalidated preview URL was not released');log('PASS interval change stops playback and releases prepared media');
+  dialog.querySelector('#prepare-clip').click();await until(()=>dialog.querySelector('#clip-preview'));const second=dialog.querySelector('#clip-preview');
+  dialog.querySelector('#prepare-clip').click();await until(()=>dialog.querySelector('#clip-preview')&&dialog.querySelector('#clip-preview')!==second);
+  second.dispatchEvent(new Event('play'));if(!dialog.querySelector('#add-clip').disabled)throw Error('Stale preview enabled adding a new output');
+  const third=dialog.querySelector('#clip-preview');third.muted=true;await third.play();if(dialog.querySelector('#add-clip').disabled)throw Error('Current preview did not enable adding');log('PASS each preparation requires its own current preview');
+  dialog.querySelector('[data-cancel]').click();await pending;if(!third.paused||third.getAttribute('src'))throw Error('Closing editor retained playback');log('PASS closing editor stops and releases playback');
+ }finally{await workspace.dialogClose?.();await pending?.catch(()=>{});host.remove();root.remove();if(before===null)sessionStorage.removeItem('gt:clip-selection');else sessionStorage.setItem('gt:clip-selection',before);}
 });
