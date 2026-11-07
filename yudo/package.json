@@ -1,0 +1,22 @@
+{
+  "name": "yudo",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prestart": "npm run build",
+    "start": "vite preview --host 127.0.0.1 --port 5178 --strictPort",
+    "dev": "vite --host 127.0.0.1 --port 5178 --strictPort",
+    "build": "vite build",
+    "test": "node --test tests/*.test.js"
+  },
+  "dependencies": {
+    "@graffiti-garden/implementation-decentralized": "0.4.0",
+    "lucide": "0.468.0"
+  },
+  "devDependencies": {
+    "vite": "6.4.5",
+    "@graffiti-garden/implementation-local": "1.5.0",
+    "fake-indexeddb": "6.2.7"
+  }
+}

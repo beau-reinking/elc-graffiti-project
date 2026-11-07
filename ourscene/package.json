@@ -1,0 +1,41 @@
+{
+  "name": "ourscene",
+  "version": "3.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "node scripts/run.mjs dev aggregator",
+    "dev:blue-hour": "node scripts/run.mjs dev blue-hour",
+    "dev:red-room": "node scripts/run.mjs dev red-room",
+    "dev:lantern": "node scripts/run.mjs dev lantern",
+    "dev:signal-yard": "node scripts/run.mjs dev signal-yard",
+    "dev:all": "node scripts/run.mjs dev-all",
+    "dev:sandbox": "node scripts/run.mjs sandbox",
+    "check": "tsc --noEmit",
+    "test": "vitest run --config vitest.config.ts",
+    "test:watch": "vitest --config vitest.config.ts",
+    "build": "npm run check && node scripts/run.mjs build-all",
+    "preview": "node scripts/run.mjs preview aggregator",
+    "preview:blue-hour": "node scripts/run.mjs preview blue-hour",
+    "preview:red-room": "node scripts/run.mjs preview red-room",
+    "preview:lantern": "node scripts/run.mjs preview lantern",
+    "preview:signal-yard": "node scripts/run.mjs preview signal-yard"
+  },
+  "dependencies": {
+    "@graffiti-garden/api": "1.4.0",
+    "@graffiti-garden/implementation-decentralized": "0.4.0",
+    "@graffiti-garden/implementation-local": "1.5.0",
+    "@js-temporal/polyfill": "0.5.1",
+    "leaflet": "1.9.4"
+  },
+  "devDependencies": {
+    "@types/leaflet": "1.9.22",
+    "@types/node": "24.10.0",
+    "typescript": "7.0.2",
+    "vite": "8.3.5",
+    "vitest": "4.0.17"
+  }
+}

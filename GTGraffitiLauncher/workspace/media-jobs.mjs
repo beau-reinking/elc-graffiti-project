@@ -1,0 +1,24 @@
+import {spawn} from 'node:child_process';
+import {mkdtemp,writeFile,readFile,rm,stat,mkdir,readdir} from 'node:fs/promises';
+import path from 'node:path';
+import os from 'node:os';
+import {randomUUID} from 'node:crypto';
+export const LIMIT=50*1024*1024,INPUT_LIMIT=100*1024*1024;
+export function validateRange(start,end,duration){if(![start,end,duration].every(Number.isFinite)||start<0||end<=start||end-start>60||end>duration+.001)throw Error('Choose a nonempty interval of at most 60 seconds within the recording.');}
+function execute(binary,args,onProgress,job){return new Promise((resolve,reject)=>{let output='',errors='';const child=spawn(binary,args,{stdio:['ignore','pipe','pipe']});if(job)job.child=child;child.stdout.on('data',d=>{output+=d;if(onProgress)onProgress(String(d))});child.stderr.on('data',d=>errors=(errors+String(d)).slice(-4000));child.on('error',reject);child.on('exit',code=>code===0?resolve(output):reject(Error(job?.cancelled?'Clip preparation cancelled.':`Cannot process this recording. ${errors.slice(-300)}`)));});}
+export class MediaJobs{
+ constructor({ffmpeg=process.env.GT_FFMPEG||'/opt/homebrew/bin/ffmpeg',ffprobe=process.env.GT_FFPROBE||'/opt/homebrew/bin/ffprobe',directory=path.join(os.tmpdir(),'gt-graffiti-clips')}={}){this.ffmpeg=ffmpeg;this.ffprobe=ffprobe;this.directory=directory;this.jobs=new Map();this.queue=Promise.resolve();this.cleanupTimer=setInterval(()=>this.expire(),60000);this.cleanupTimer.unref();}
+ async initialize(){await mkdir(this.directory,{recursive:true,mode:0o700});for(const name of await readdir(this.directory))if(name.startsWith('job-'))await rm(path.join(this.directory,name),{recursive:true,force:true});}
+ async create(bytes,{start,end,account}){if(!account||typeof account!=='string'||account.length>2048)throw Error('An active account is required.');if(!bytes.length||bytes.length>INPUT_LIMIT)throw Error('The source must be 100 MB or smaller.');if(!Number.isFinite(start)||!Number.isFinite(end)||start<0||end<=start||end-start>60)throw Error('Choose an interval of at most 60 seconds.');const dir=await mkdtemp(path.join(this.directory,'job-')),id=randomUUID(),job={id,dir,start,end,account,status:'queued',progress:0,createdAt:Date.now(),cancelled:false};await writeFile(path.join(dir,'input'),bytes,{mode:0o600});this.jobs.set(id,job);this.queue=this.queue.catch(()=>{}).then(()=>this.process(job));return this.view(job);}
+ view(j){return {id:j.id,status:j.status,progress:j.progress,error:j.error,duration:j.duration,size:j.size,mediaType:j.mediaType};}
+ get(id,account){const j=this.jobs.get(id);if(!j||j.account!==account)throw Error('Clip job unavailable.');return j;}
+ async probe(file){return JSON.parse(await execute(this.ffprobe,['-v','error','-show_format','-show_streams','-of','json',file]));}
+ async process(j){if(j.cancelled)return;try{j.status='processing';const input=path.join(j.dir,'input'),probe=await this.probe(input);validateRange(j.start,j.end,Number(probe.format.duration));const video=probe.streams.some(s=>s.codec_type==='video');j.mediaType=video?'video/mp4':'audio/mp4';j.output=path.join(j.dir,video?'clip.mp4':'clip.m4a');
+ for(const height of video?[720,480]:[0]){if(j.cancelled)return;const args=['-y','-nostdin','-v','error','-ss',String(j.start),'-i',input,'-t',String(j.end-j.start),'-map_metadata','-1','-map_chapters','-1'];if(video)args.push('-map','0:v:0','-map','0:a:0?','-vf',`scale=w='min(iw,${height===720?1280:854})':h='min(ih,${height})':force_original_aspect_ratio=decrease:force_divisible_by=2`,'-c:v','libx264','-preset','fast','-crf',height===720?'23':'28','-pix_fmt','yuv420p','-maxrate',height===720?'4M':'1500k','-bufsize','8M');else args.push('-vn');args.push('-c:a','aac','-b:a','160k','-avoid_negative_ts','disabled','-movflags','+faststart','-progress','pipe:1',j.output);await execute(this.ffmpeg,args,chunk=>{const m=chunk.match(/out_time_us=(\d+)/);if(m)j.progress=Math.min(.99,Number(m[1])/1000000/(j.end-j.start));},j);if((await stat(j.output)).size<=LIMIT)break;}
+ const result=await this.probe(j.output);j.duration=Number(result.format.duration);j.size=(await stat(j.output)).size;
+ if(!Number.isFinite(j.duration)||j.duration<=0||j.duration>60||j.size>LIMIT)throw Error('This export does not fit Yudo’s limits. Choose a shorter interval.');if(j.cancelled)return;j.progress=1;j.status='ready';await rm(input,{force:true});
+ }catch(e){if(!j.cancelled){j.status='failed';j.error=e.message;await rm(j.dir,{recursive:true,force:true});}}}
+ async cancel(id,account){const j=this.get(id,account);j.cancelled=true;j.status='cancelled';j.child?.kill('SIGKILL');await rm(j.dir,{recursive:true,force:true});}
+ async expire(){for(const j of this.jobs.values())if(Date.now()-j.createdAt>30*60000){await this.cancel(j.id,j.account);this.jobs.delete(j.id)}}
+ async close(){clearInterval(this.cleanupTimer);for(const j of this.jobs.values())await this.cancel(j.id,j.account);}
+}

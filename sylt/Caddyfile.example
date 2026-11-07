@@ -1,0 +1,5 @@
+# Replace this hostname with a domain you control.
+music.example.com {
+    encode zstd gzip
+    reverse_proxy 127.0.0.1:4173
+}
