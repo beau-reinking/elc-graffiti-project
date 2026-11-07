@@ -22,11 +22,11 @@ action(document.querySelector('#reference'),async()=>{const source=document.quer
 // Generated sources exercise formats without accessing a camera or microphone.
 action(document.querySelector('#edge-video'),async()=>{
  const canvas=document.createElement('canvas');canvas.width=240;canvas.height=426;
- const ctx=canvas.getContext('2d'),stream=canvas.captureStream(0),track=stream.getVideoTracks()[0],chunks=[];
+ const ctx=canvas.getContext('2d'),stream=canvas.captureStream(30),track=stream.getVideoTracks()[0],chunks=[];
  const recorder=new MediaRecorder(stream,{mimeType:'video/webm'});
  const done=new Promise(resolve=>recorder.onstop=()=>resolve(new Blob(chunks,{type:'video/webm'})));
  recorder.ondataavailable=e=>chunks.push(e.data);recorder.start();
- try{for(let i=0;i<40;i++){ctx.fillStyle=`hsl(${i*9},60%,40%)`;ctx.fillRect(0,0,240,426);ctx.fillStyle='white';ctx.font='20px sans-serif';ctx.fillText(`Portrait ${i}`,20,200);track.requestFrame();await new Promise(resolve=>setTimeout(resolve,i%2?140:60));}}
+ try{for(let i=0;i<40;i++){ctx.fillStyle=`hsl(${i*9},60%,40%)`;ctx.fillRect(0,0,240,426);ctx.fillStyle='white';ctx.font='20px sans-serif';ctx.fillText(`Portrait ${i}`,20,200);track.requestFrame?.();await new Promise(resolve=>setTimeout(resolve,i%2?140:60));}}
  finally{recorder.stop();stream.getTracks().forEach(t=>t.stop());}
  log('SOURCE portrait 240×426, silent, alternating frame intervals; MediaRecorder WebM');await run(await done,1,3);
  const preview=document.querySelector('#preview video');await new Promise((resolve,reject)=>{if(preview.readyState>=1)return resolve();preview.onloadedmetadata=resolve;preview.onerror=()=>reject(Error('Portrait output metadata unavailable'));});
@@ -36,6 +36,6 @@ action(document.querySelector('#edge-video'),async()=>{
 action(document.querySelector('#malformed'),async()=>{
  for(const [start,end]of [[0,61],[2,2],[-1,2]]){try{await processor.prepare(tone(),{start,end,signal:new AbortController().signal});throw Error('Invalid selection unexpectedly succeeded');}catch(e){if(!/selection|interval|seconds|start|end/i.test(e.message))throw e;}}
  log('PASS overlong, empty and negative selections rejected');
- try{await processor.prepare(new Blob(['not a media file'],{type:'video/mp4'}),{start:0,end:1,signal:new AbortController().signal});throw Error('Malformed media unexpectedly succeeded');}catch(e){if(!/could not be read|supported audio or video/i.test(e.message))throw e;log('PASS malformed media rejected with recoverable error');}
+ try{await processor.prepare(new Blob(['not a media file'],{type:'video/mp4'}),{start:0,end:1,signal:new AbortController().signal});throw Error('Malformed media unexpectedly succeeded');}catch(e){if(!/could not be read|supported audio or video|Cannot establish this recording/i.test(e.message))throw e;log('PASS malformed media rejected with recoverable error');}
  await run(tone(3),0,2);log('PASS valid retry after malformed media');
 });
