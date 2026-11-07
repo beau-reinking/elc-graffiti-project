@@ -46,7 +46,7 @@ action(document.querySelector('#editor-lifecycle'),async()=>{
  const source={url:'synthetic:source',value:{title:'Synthetic lifecycle test',duration:5,mediaType:'audio/wav',type:'practice',media:'synthetic:media'}};
  const service={actor:'synthetic:test',session:{actor:'synthetic:test'},async recordings(){return [source]},async source(){return source},api:{async getMedia(){return {data:tone(5)}}},async savedSelection(){return null},async saveSelection(){}};
  const workspace={epoch:0,crosspost:()=>service,processor:{async prepare(blob,{start,end}){const output=tone(end-start);return {blob:output,duration:end-start,size:output.size,exportRevision:'synthetic-lifecycle'}}}};
- const before=sessionStorage.getItem('gt:clip-selection');let pending;
+ const before=sessionStorage.getItem('gt:clip-selection');let pending,draftCalls=0,completeDraft;service.draft=async()=>{draftCalls++;return new Promise(resolve=>completeDraft=resolve)};
  const until=async check=>{const deadline=performance.now()+5000;while(!check()){if(performance.now()>deadline)throw Error('Editor lifecycle check timed out');await new Promise(resolve=>setTimeout(resolve,20));}};
  try{
   pending=selectClip(workspace,{sourceUrl:source.url});await until(()=>host.querySelector('#prepare-clip'));
@@ -59,6 +59,8 @@ action(document.querySelector('#editor-lifecycle'),async()=>{
   dialog.querySelector('#prepare-clip').click();await until(()=>dialog.querySelector('#clip-preview')&&dialog.querySelector('#clip-preview')!==second);
   second.dispatchEvent(new Event('play'));if(!dialog.querySelector('#add-clip').disabled)throw Error('Stale preview enabled adding a new output');
   const third=dialog.querySelector('#clip-preview');third.muted=true;await third.play();if(dialog.querySelector('#add-clip').disabled)throw Error('Current preview did not enable adding');log('PASS each preparation requires its own current preview');
+  const add=dialog.querySelector('#add-clip');add.click();add.click();await until(()=>draftCalls===1);if(!add.disabled)throw Error('Adding was not disabled during save');
+  end.value='3';end.dispatchEvent(new Event('input'));await until(()=>!dialog.querySelector('#clip-preview'));completeDraft({id:'synthetic:prepared'});await until(()=>dialog.querySelector('[role=alert]').textContent.includes('selection changed'));if(!dialog.open)throw Error('A stale save was added after selection changed');log('PASS repeated Add is suppressed and stale save results are ignored');
   dialog.querySelector('[data-cancel]').click();await pending;if(!third.paused||third.getAttribute('src'))throw Error('Closing editor retained playback');log('PASS closing editor stops and releases playback');
  }finally{await workspace.dialogClose?.();await pending?.catch(()=>{});host.remove();root.remove();if(before===null)sessionStorage.removeItem('gt:clip-selection');else sessionStorage.setItem('gt:clip-selection',before);}
 });
