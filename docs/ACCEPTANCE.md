@@ -27,3 +27,18 @@ Clean up designated test records using their author accounts. Do not publish fab
 ## Evidence
 
 Copy `release-evidence.example.json` to ignored `release-evidence.json`. Fill actual outcomes, not anticipated ones. The checker binds evidence to HEAD. Keep sensitive screenshots, actor identifiers and private URLs out of the repository and diagnostic summaries. Check Cloudflare build quota and Graffiti provider terms/storage limits before promotion. Review encoder source distribution.
+
+## macOS staging run — 2026-11-06 (in progress)
+
+Tested hosted commit `57492e0` on Mac15,13 / Apple M3 / 16 GB RAM. Generated source: 300 seconds, 1920×1080, 30 fps, H.264/AAC, 72,590,917 bytes, with visible source timecode. All six outputs were playable 60-second MP4 files, approximately 28.1 MB.
+
+| Browser | Version | 0–60 s | 120–180 s | 240–300 s |
+|---|---|---:|---:|---:|
+| Chrome | 156.0.8078.81 | 54.5 s | 41.2 s | 49.4 s |
+| Firefox | 158.0.1 | 50.5 s | 101.8 s | 63.1 s |
+
+Both browsers remained responsive, cancelled an active encode, and retained the selection. Chrome retry passed in 39.7 seconds; Firefox retry passed in 89.0 seconds. Firefox required one manual source selection after its initial screen-capture failure; native controls subsequently recovered. Chrome login cancellation showed a retryable error; retry returned to provider login, and a user-created dedicated identity returned to the initiating Sylt route. Its Sylt profile saved successfully. A real private-audio save exposed a CSP incompatibility with Graffiti’s AJV runtime schema compilation. The take remained available for retry. Publishing the proposed policy fix is awaiting explicit approval after automatic review rejected the security relaxation. A successful hosted save retry remains unverified. Real-account media, privacy, matching, and moderation acceptance remain in progress. Windows remains unverified.
+
+Findings fixed locally: cancellation was misleadingly labeled FAIL in the staging aid; old preview URLs were retained; Edge was misclassified as supported Chrome; release/venue validation wrongly required HTTPS instead of canonical Graffiti DIDs. The reviewer DID was resolved and reciprocally verified through the pinned SDK. The stable reviewer remains the project owner's account.
+
+Regression checks: workspace 21, Yudo 10, Sylt 11, OurScene 86, static-site 11 tests passed (139 total), plus OurScene TypeScript. A moderation integration test exceeded its five-second limit during concurrent encoding; all 86 OurScene tests passed on a one-worker rerun, and a subsequent complete default-worker run passed all 139 tests. Staging build passed its static-asset checks. Native code is unchanged; prior 14 Swift results remain applicable. Encoder license/source distribution and provider quotas are still release gates. Production remains unpromoted.

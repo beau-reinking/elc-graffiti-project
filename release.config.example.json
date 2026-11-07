@@ -1,7 +1,7 @@
 {
   "projectName": "gt-graffiti-workspace",
   "stagingProjectName": "gt-graffiti-workspace-staging",
-  "moderatorActor": "https://bcreinking.graffiti.actor",
+  "moderatorActor": "did:plc:lpemiz4o5fccqwuhxm3goes5",
   "supportEmail": "breinking3@gatech.edu",
   "eventPublishing": "moderator-approved-submissions",
   "venues": [],

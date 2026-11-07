@@ -15,7 +15,7 @@ npm run preview
 
 Open http://127.0.0.1:5189. This is a static-only preview; it has no session or clip server. `/qa.html` is a staging/preview synthetic browser test. It never publishes test recordings to Graffiti. Existing native operation remains at http://127.0.0.1:5178.
 
-For a release build, copy `release.config.example.json` to `release.config.json`. The example contains the reviewer address supplied by the project owner: `https://bcreinking.graffiti.actor`. Verify it exactly matches the actor emitted by your Graffiti session before testing delivery. No credentials belong in this file. Staging and production build commands reject invalid configuration.
+For a release build, copy `release.config.example.json` to `release.config.json`. The example contains the canonical Graffiti DID resolved and reciprocally verified for the project owner’s handle `bcreinking.graffiti.actor`. Actor identifiers are `did:plc` or `did:web` values emitted by Graffiti; a handle’s HTTPS website is not an actor identifier. Verify the selected reviewer before testing delivery. No credentials belong in this file. Staging and production build commands reject invalid configuration.
 
 ```
 npm run build:staging

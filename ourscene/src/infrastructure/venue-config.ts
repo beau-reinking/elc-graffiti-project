@@ -10,3 +10,7 @@ export function configuredVenue(input: Omit<VenueConfig, 'venueActor'> & { onlin
     ...(mode === 'local' ? {} : { testHandle: undefined, defaultAddress: undefined, defaultLocation: undefined }),
   });
 }
+
+export function isVenueActor(actor: string, local = false): boolean {
+  return /^did:plc:[a-z2-7]{24}$/.test(actor) || /^did:web:[A-Za-z0-9._%+-]+(?::[A-Za-z0-9._%+-]+)*$/.test(actor) || (local && /^did:local:[A-Za-z0-9_-]+$/.test(actor));
+}

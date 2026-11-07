@@ -1,9 +1,9 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {readFile,mkdtemp,writeFile,mkdir}from'node:fs/promises';import os from'node:os';import path from'node:path';
 import {writeWorkspaceRoutes}from'../scripts/routes.mjs';
-import {createStaticServer}from'../scripts/preview.mjs';import {configuration}from'../scripts/config.mjs';
+import {createStaticServer}from'../scripts/preview.mjs';import {configuration,isActorDID}from'../scripts/config.mjs';
 import {validateSource,validateProbe,validateOutput,exportArguments,INPUT_LIMIT,OUTPUT_LIMIT}from'../GTGraffitiLauncher/workspace/src/media/contract.js';
-import {diagnosticSummary}from'../GTGraffitiLauncher/workspace/src/diagnostics.js';
+import {diagnosticSummary,browserSupport}from'../GTGraffitiLauncher/workspace/src/diagnostics.js';
 test('interval validation accepts exactly sixty seconds and rejects invalid selections',()=>{validateSource({size:100},5,65);for(const [a,b]of [[-1,2],[2,2],[2,1],[0,61],[NaN,3],[0,Infinity]])assert.throws(()=>validateSource({size:100},a,b));});
 test('source limits and stream validation',()=>{assert.throws(()=>validateSource({size:INPUT_LIMIT+1},0,1));assert.throws(()=>validateSource({size:0},0,1));validateProbe({format:{duration:300},streams:[{codec_type:'video'}]},240,300);assert.throws(()=>validateProbe({format:{duration:301},streams:[{codec_type:'audio'}]},0,1));assert.throws(()=>validateProbe({format:{duration:30},streams:[{codec_type:'audio'}]},0,31));assert.throws(()=>validateProbe({format:{},streams:[]},0,1));});
 test('output validation enforces actual duration and byte limits',()=>{validateOutput({duration:60,size:OUTPUT_LIMIT,mediaType:'video/mp4'});for(const value of [{duration:60.001,size:1,mediaType:'video/mp4'},{duration:0,size:1,mediaType:'audio/mp4'},{duration:1,size:OUTPUT_LIMIT+1,mediaType:'audio/mp4'},{duration:1,size:1,mediaType:'video/webm'}])assert.throws(()=>validateOutput(value));});
@@ -14,3 +14,12 @@ test('static routes preserve aliases and queries while missing scripts remain 40
 test('published legal pages disclose research, limits, contact and adult audience',async()=>{for(const name of ['privacy','agreement']){const content=await readFile(new URL(`../GTGraffitiLauncher/workspace/public/legal/${name}.html`,import.meta.url),'utf8');assert.match(content,/breinking3@gatech.edu/);assert.match(content,/18/);assert.match(content,/research/i);}});
 
 test('release configuration rejects missing reviewer and approval policy',async()=>{const before=process.env.GT_RELEASE_CONFIG;process.env.GT_RELEASE_CONFIG='{}';try{await assert.rejects(configuration('production'),/moderatorActor/);}finally{if(before===undefined)delete process.env.GT_RELEASE_CONFIG;else process.env.GT_RELEASE_CONFIG=before;}});
+
+test('support notice separates supported desktop browsers from Chromium variants and mobile',()=>{
+ assert.equal(browserSupport('Mozilla/5.0 (Macintosh) Chrome/156.0.0 Safari/537.36').supported,true);
+ assert.equal(browserSupport('Mozilla/5.0 (Windows NT 10.0) Firefox/158.0').supported,true);
+ for(const agent of ['Mozilla/5.0 (Windows NT 10.0) Chrome/156.0 Edg/156.0','Mozilla/5.0 (Macintosh) Chrome/156.0 OPR/130.0','Mozilla/5.0 (Macintosh) Version/26.0 Safari/605.1','Mozilla/5.0 (Linux; Android 16) Chrome/156.0 Mobile','Mozilla/5.0 (X11; Linux) Chrome/156.0'])assert.equal(browserSupport(agent).supported,false);
+ assert.equal(browserSupport('Mozilla/5.0 (Windows NT 10.0) Chrome/156.0 Edg/156.0').family,'Other');
+});
+
+test('release actor validation accepts canonical DIDs and rejects website handles',()=>{for(const actor of ['did:plc:aaaaaaaaaaaaaaaaaaaaaaaa','did:web:venue.example','did:web:venue.example:account'])assert.equal(isActorDID(actor),true);for(const actor of ['https://venue.example','venue.graffiti.actor','did:local:test','did:plc:short',null])assert.equal(isActorDID(actor),false);});

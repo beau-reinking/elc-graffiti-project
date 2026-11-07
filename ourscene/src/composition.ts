@@ -1,3 +1,4 @@
+import { isVenueActor } from './infrastructure/venue-config';
 import {mountEventSubmissions} from './presentation/event-submissions-view';
 import type { Graffiti } from '@graffiti-garden/api';
 import type { VenueConfig, VenueDirectoryReader } from './application/ports';
@@ -126,7 +127,7 @@ export function showStartupError(error: unknown) {
 /** Discovered venues use their own authored public profile, not a fictional route. */
 export async function mountDiscoveredVenue() {
  const actor = new URL(location.href).searchParams.get('actor');
- if (!actor || !( /^https:\/\//.test(actor) || (mode==='local'&&actor.startsWith('did:local:')) )) throw new Error('A valid Graffiti venue actor is required.');
+ if (!actor || !isVenueActor(actor, mode === 'local')) throw new Error('A valid Graffiti venue actor is required.');
  const client=(await loadGraffitiFactory())();
  let stop=()=>{};
  try {
