@@ -42,3 +42,11 @@ export function discover(rows,me,settings={},moderator=''){
 export function validateProfile(p){if(!p.name?.trim())throw Error('Add a display name.');if(!p.location?.city||!Number.isFinite(p.location.lat)||!Number.isFinite(p.location.lng))throw Error('Choose a city.');if(!p.instruments?.length)throw Error('Choose your primary instrument or role.');if(!p.genres?.length)throw Error('Choose at least one genre.');if(!p.seeking?.length&&!p.openTo?.length)throw Error('Choose what you’re seeking or open to.');if(p.samples?.length>3)throw Error('You can publish up to three samples.');}
 export function validateMedia(file,duration){if(!MIME.includes(file.type))throw Error('Choose an MP3, M4A, WAV, MP4, or WebM file.');if(file.size>MAX_BYTES)throw Error('Samples must be 50 MB or smaller.');if(!Number.isFinite(duration)||duration<=0||duration>60)throw Error('Samples must be playable and no longer than 60 seconds.');}
 export const CITIES=[['New York, NY',40.7,-74],['Brooklyn, NY',40.7,-73.9],['Los Angeles, CA',34.1,-118.2],['Chicago, IL',41.9,-87.6],['Nashville, TN',36.2,-86.8],['Austin, TX',30.3,-97.7],['Atlanta, GA',33.7,-84.4],['Boston, MA',42.4,-71.1],['Philadelphia, PA',40,-75.2],['Seattle, WA',47.6,-122.3],['London, UK',51.5,-0.1],['Toronto, CA',43.7,-79.4]];
+
+/** Incomplete private drafts omit coordinates until the musician selects a city. */
+export function createDraft(saved){
+ const draft=structuredClone(saved||{name:'',bio:'',avatar:'',location:{city:''},instruments:[],genres:[],inspirations:[],samples:[],seeking:[],openTo:[],statement:''});
+ draft.location={city:'',...draft.location};
+ for(const key of ['lat','lng'])if(draft.location[key]==null)delete draft.location[key];
+ return draft;
+}
