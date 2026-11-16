@@ -3,3 +3,13 @@
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
 [hidden]{display:none!important}.profile-form textarea{min-height:90px;resize:vertical}.mode[disabled]{opacity:.5}.input-meter{height:6px;border-radius:4px;background:#d7ddcb;width:130px;margin:14px auto 20px;overflow:hidden}.input-meter span{height:100%;display:block;background:#8c9e66;transition:width .1s}.modal .error{overflow-wrap:anywhere}
 .columns>section,.right-column,.waveform,.post{min-width:0}.columns{grid-template-columns:minmax(0,1fr) 280px}@media(max-width:1150px){.columns{grid-template-columns:minmax(0,1fr) 235px}}@media(max-width:930px){.columns{grid-template-columns:minmax(0,1fr)}}@media(max-width:650px){.post-footer button{min-width:0}.post-footer{gap:12px}.hero-copy{max-width:85%}.topbar{min-width:0}.heading{align-items:center}.heading>div{min-width:0}.heading>.outline{flex-shrink:0}.player{max-width:100%}}
+
+#sylt-research, #sylt-browser-notice {
+  padding: 1rem 1.5rem;
+  text-align: center;
+  background: #f2f0e8;
+  color: #33392c;
+  font-size: .875rem;
+}
+#sylt-research a { color: inherit; text-decoration: underline; }
+#sylt-research nav { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem; margin-top: .5rem; }

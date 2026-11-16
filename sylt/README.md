@@ -66,3 +66,24 @@ Browser checks cover demo startup, upload/preview/private save, optional friend 
 The standalone package contains no ChatGPT Sites manifest or deployment tooling. Hosting the browser app yourself does not also host the Graffiti infrastructure: identity and social data still use the Graffiti provider selected by the user. No new server destination or domain was supplied, so remote deployment is left to your server administrator. Docker files are supplied but require verification on a machine with Docker installed.
 
 The local Graffiti test package pulls older PouchDB dependencies with moderate audit advisories; those dependencies are development-only and excluded from the browser bundle. Review the upstream test dependency before using it in any server process.
+
+## Standalone Cloudflare Pages release
+
+From the repository root, install Sylt’s locked dependencies with
+`npm ci --prefix sylt` and run `npm run build:sylt`. Serve `dist-sylt/` at the
+site root. Use the Node version in the root `.node-version`.
+
+Create a separate Pages project connected to the existing repository. Set
+`sylt-launch` as its production branch, leave the root directory at the
+repository root, set the build command to
+`npm ci --prefix sylt && npm run build:sylt`, and set the output directory
+to `dist-sylt`. Use a branch preview to test the same commit before promoting
+it. Preview and production share the existing Graffiti data, so use dedicated
+test identities. Sessions and demo data are tied to the browser origin.
+
+Verify the deployed `/release.json` commit, the home and legal pages, the
+404 response, login, permissions, and saving and playing a private recording.
+Check a public share anonymously and a friends share with a second identity.
+If a release regresses, restore the prior successful deployment in the Sylt
+project’s Deployments view. Redeploying the website does not roll back
+Graffiti records.

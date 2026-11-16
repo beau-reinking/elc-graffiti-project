@@ -18,3 +18,34 @@ test('private trim checkpoints resume, reuse prepared drafts and disappear on so
  const first=await service.draft(options),retry=await service.draft(options);assert.equal(first.syltDraft,retry.syltDraft);assert.equal(first.media,retry.media);
  await service.removeForSource(source.url);assert.equal(await service.savedSelection(source.url),undefined);await assert.rejects(api.get(first.syltDraft,{},session));await assert.rejects(api.getMedia(first.media,{},session));
 });
+
+test('source cleanup resumes public media deletion after a partial failure', async () => {
+ const dir = await mkdtemp(path.join(os.tmpdir(), 'gt-source-retry-'));
+ const api = new GraffitiLocal({ pouchDBOptions: { name: path.join(dir, 'db') } });
+ const owner = { actor: 'did:example:source-owner' };
+ const service = new CrosspostService(api, owner);
+ const source = await service.post('practice', { title: 'Original', duration: 30 });
+ const draft = await service.draft({
+  sourceUrl: source.url, start: 0, end: 20, duration: 20,
+  blob: new Blob(['clip'], { type: 'audio/mp4' }), title: 'Excerpt', contribution: 'Vocals',
+ });
+ const excerpt = await service.publish(draft);
+ const deleteMedia = api.deleteMedia.bind(api);
+ let failOnce = true;
+ api.deleteMedia = async (url, session) => {
+  if (url === excerpt.media && failOnce) {
+   failOnce = false;
+   throw new TypeError('Temporary network error');
+  }
+  return deleteMedia(url, session);
+ };
+
+ await assert.rejects(service.removeForSource(source.url), /cleanup needs another attempt/);
+ await assert.rejects(service.resolve(excerpt.sylt.postUrl, owner.actor));
+ assert.ok(await api.get(source.url, SCHEMA, owner));
+ assert.ok(await api.getMedia(excerpt.media, {}, owner));
+
+ await service.removeForSource(source.url);
+ await assert.rejects(api.getMedia(excerpt.media, {}, owner));
+ await assert.rejects(api.get(draft.syltDraft, SCHEMA, owner));
+});

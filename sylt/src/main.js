@@ -1,9 +1,11 @@
 import './style.css';
+import { CrosspostService } from './crosspost.js';
 import {createIcons,ArrowRight,ArrowUpRight,AudioLines,Check,CheckCheck,ChevronRight,Headphones,Heart,House,Link,LockKeyhole,LogOut,MessageCircle,Mic,Music2,Pause,Play,Plus,Search,Share2,Sprout,Square,Trash2,Upload,UserRound,UserRoundPlus,UsersRound,Video,X} from 'lucide';
 const icons={ArrowRight,ArrowUpRight,AudioLines,Check,CheckCheck,ChevronRight,Headphones,Heart,House,Link,LockKeyhole,LogOut,MessageCircle,Mic,Music2,Pause,Play,Plus,Search,Share2,Sprout,Square,Trash2,Upload,UserRound,UserRoundPlus,UsersRound,Video,X};
 import {Repository,graffiti,seedDemo,readPublic,readPublicMedia} from './store.js';
 import {byNewest,friendsFrom,pendingRequests,eligiblePost,validateMedia,safeText as e,MAX_SECONDS} from './domain.js';
 const workspace=window.parent!==window?window.parent.gtWorkspace:null;
+const standalone = import.meta.env.MODE === 'standalone';
 const app=document.querySelector('#app'), overlays=document.querySelector('#overlays');
 let accountEpoch=0;
 const state={repo:null,session:null,demo:false,objects:[],page:'home',loading:false,error:'',filter:'all'};
@@ -68,7 +70,43 @@ function openSharing(o){if(o.actor!==me())return;const source=o.value.type==='pr
 const publishing=new Map();
 async function publish(source,isPublic,button){if(state.demo&&isPublic){toast('Public links need a real Graffiti account. Demo recordings stay in this browser.');return}button.disabled=true;const key=`${source.url}:${isPublic?'public':'shared'}`;let operation=publishing.get(key);if(!operation){operation={id:crypto.randomUUID()};publishing.set(key,operation)}try{document.querySelector('#share-progress').textContent='Creating a separately shared copy…';const existing=state.objects.find(o=>o.actor===me()&&o.value.source===source.url&&o.value.type===(isPublic?'public':'shared'));if(existing){if(isPublic)await copy(linkTo('post',existing.url));else toast('Already shared with friends.');return}const audience=isPublic?null:[me(),...friends()];if(!isPublic&&audience.length<2)throw new Error('Add a friend before sharing.');if(!operation.media){const blob=await state.repo.media(source.value.media);operation.media=await state.repo.upload(blob,audience)}const p=ownProfile();const value={source:source.url,title:source.value.title,caption:source.value.caption,media:operation.media,mediaType:source.value.mediaType,duration:source.value.duration,displayName:p.name,instrument:p.instrument||'',operationId:operation.id,...(!isPublic?{audience}: {})};const rows=await state.repo.list();const result=rows.find(r=>r.actor===me()&&r.value.operationId===operation.id)||await state.repo.post(isPublic?'public':'shared',value,audience);state.objects.push(result);render();openSharing(source);if(isPublic)await copy(linkTo('post',result.url));else toast('Shared with your people. A little better, together.')}catch(err){const holder=overlays.querySelector('.inline-error');if(holder)holder.innerHTML=`<div class="error">${e(errorText(err))} Your private recording is safe.</div>`;button.disabled=false}finally{const p=document.querySelector('#share-progress');if(p)p.textContent=''}}
 async function updateSettings(patch){const value={...settings(),...patch};const next=await state.repo.post('settings',value);state.objects.push(next);render()}
-async function removeShared(o){await state.repo.remove(o.url);state.objects=state.objects.filter(x=>x.url!==o.url);try{await state.repo.removeMedia(o.value.media)}catch{toast('Share removed. Media cleanup will need another attempt.')}render()}
+async function removeShared(o) {
+  const repo = state.repo;
+  const epoch = accountEpoch;
+  try { await repo.removeMedia(o.value.media); }
+  catch (error) { if (!/NotFound/.test(error.name)) throw error; }
+  if (epoch !== accountEpoch) return;
+  await repo.remove(o.url);
+  if (epoch !== accountEpoch) return;
+  state.objects = state.objects.filter(row => row.url !== o.url);
+  render();
+}
+function excerptCleanup() {
+  if (state.demo || !state.session) return null;
+  if (workspace) return workspace.crosspost();
+  const epoch = accountEpoch;
+  return new CrosspostService(graffiti, state.session, { isCurrent: () => accountEpoch === epoch });
+}
+async function deleteRecording(o) {
+  const repo = state.repo;
+  const epoch = accountEpoch;
+  if (o.actor !== me()) throw new Error('Only the author can delete this recording.');
+  if (o.value.type === 'practice') {
+    await excerptCleanup()?.removeForSource(o.url);
+    if (epoch !== accountEpoch) return;
+    for (const share of state.objects.filter(row => row.actor === repo.actor &&
+      row.value.source === o.url && ['shared', 'public'].includes(row.value.type))) {
+      if (epoch !== accountEpoch) return;
+      await removeShared(share);
+    }
+  }
+  if (epoch !== accountEpoch) return;
+  await removeShared(o);
+  if (epoch !== accountEpoch) return;
+  closeModal();
+  render();
+  toast('Recording deleted');
+}
 async function confirmDeletion(o){showModal('Delete this recording?',`<p>${o.value.type==='practice'?'This deletes the private recording, its shared versions, and any derived public clips featured on Yudo.':'This removes the shared version.'} Downloaded copies cannot be retracted.</p><div class="actions"><button class="primary" data-confirm-delete="${e(o.url)}">Delete recording</button><button class="outline" data-action="close">Keep it</button></div><div class="inline-error" role="alert"></div>`)}
 async function publicPage(url){app.innerHTML=`<main class="public-page"><span class="brand">${brand()}</span><div class="loading">Opening a moment of music…</div></main>`;refreshIcons();try{const o=await readPublic(url);if(!['public','excerpt'].includes(o.value.type)||o.allowed!=null)throw new Error('This public recording is unavailable.');app.innerHTML=`<main class="public-page"><a class="brand" href="${location.pathname}">${brand()}</a><div class="eyebrow muted">A little music, shared with you</div><h1>${e(o.value.title)}</h1><article class="post"><div class="person"><strong>${e(o.value.displayName)}</strong><span>${e(o.value.instrument||'Musician')} · ${date(o.value.createdAt)}</span></div><p style="margin:20px 0">${e(o.value.caption)}</p><div id="public-player" class="loading">Opening recording…</div></article><p class="form-note">Play something, capture your progress, share the journey.</p><a class="outline" href="${location.pathname}">Find your practice room ${icon('arrow-up-right')}</a></main>`;refreshIcons();const blob=await readPublicMedia(o.value.media),src=URL.createObjectURL(blob);document.querySelector('#public-player').innerHTML=`<${o.value.mediaType.startsWith('video/')?'video':'audio'} controls src="${src}" style="width:100%" aria-label="${e(o.value.title)}"></${o.value.mediaType.startsWith('video/')?'video':'audio'}>`}catch{app.innerHTML=`<main class="public-page"><span class="brand">${brand()}</span>${empty('This recording isn’t available','The owner may have removed this share, or the connection was interrupted.','public-retry','Try again')}<a class="text-btn" style="margin-top:20px" href="${location.pathname}">Go to Sylt</a></main>`;refreshIcons()}}
 document.addEventListener('click',async ev=>{const b=ev.target.closest('button');if(!b||b.disabled)return;const d=b.dataset;const find=url=>state.objects.find(o=>o.url===url);try{
@@ -84,7 +122,7 @@ document.addEventListener('click',async ev=>{const b=ev.target.closest('button')
   if(d.copyPublic){await copy(linkTo('post',d.copyPublic));return}
   if(d.removeShare){b.disabled=true;const o=find(d.removeShare),source=find(o.value.source);await removeShared(o);openSharing(source);toast('Shared version removed');return}
   if(d.delete){await confirmDeletion(find(d.delete));return}
-  if(d.confirmDelete){b.disabled=true;const o=find(d.confirmDelete);if(workspace)await workspace.crosspost().removeForSource(o.value.source||o.url);if(o.value.type==='practice'){for(const v of state.objects.filter(a=>a.actor===me()&&a.value.source===o.url&&['shared','public'].includes(a.value.type)))await removeShared(v)}await removeShared(o);closeModal();render();toast('Recording deleted');return}
+  if(d.confirmDelete){b.disabled=true;await deleteRecording(find(d.confirmDelete));return}
   if(d.accept){b.disabled=true;const r=find(d.accept);await state.repo.post('accept',{request:r.url},[me(),r.actor]);await refresh(true);openFriends();toast('You’re connected. Make a little music together.');return}
   if(d.decline){b.disabled=true;const r=find(d.decline);await state.repo.post('decline',{request:r.url},[me(),r.actor]);await refresh(true);openFriends();return}
   if(d.cancel){b.disabled=true;await state.repo.remove(d.cancel);await refresh(true);openFriends();return}
@@ -106,7 +144,7 @@ document.addEventListener('click',async ev=>{const b=ev.target.closest('button')
     case 'copy-profile':await copy(linkTo('friend',state.demo?me():await graffiti.actorToHandle(me()).catch(()=>me())));break;
     case 'upload':document.querySelector('#take-file').click();break;
     case 'stop-recording':if(take?.recorder?.state==='recording'){b.disabled=true;take.recorder.stop()}break;
-    case 'public-retry':await publicPage(new URLSearchParams(location.search).get('post'));break;
+    case 'public-retry':await publicPage(publicUrl);break;
   }
 }catch(err){const holder=overlays.querySelector('.inline-error')||document.querySelector('#login-error');if(holder)holder.innerHTML=`<div class="error">${e(errorText(err))}</div>`;else toast(errorText(err));b.disabled=false}});
 document.addEventListener('change',ev=>{if(ev.target.id==='take-file')acceptFile(ev.target.files[0])});
@@ -120,6 +158,14 @@ graffiti.sessionEvents.addEventListener('login',ev=>{if(ev.detail.error){toast(`
 graffiti.sessionEvents.addEventListener('logout',ev=>{if(ev.detail.error){toast(errorText(ev.detail.error));return}if(ev.detail.actor===me())endSession()});
 document.addEventListener('play',ev=>{if(ev.target.matches('audio,video')){stopPlayback();document.querySelectorAll('audio,video').forEach(el=>{if(el!==ev.target)el.pause()})}},true);
 window.addEventListener('beforeunload',ev=>{if(take?.blob||take?.recorder?.state==='recording'){ev.preventDefault();ev.returnValue=''}});
+if (standalone) {
+  document.querySelector('#sylt-research').hidden = false;
+  const supported = /(?:Windows NT|Macintosh)/.test(navigator.userAgent) &&
+    /(?:Chrome|Firefox)\//.test(navigator.userAgent) &&
+    !/(?:Edg|OPR)\//.test(navigator.userAgent) &&
+    !/Mobile/.test(navigator.userAgent);
+  document.querySelector('#sylt-browser-notice').hidden = supported;
+}
 const publicUrl=new URLSearchParams(location.search).get('post')||new URLSearchParams(location.search).get('excerpt');if(publicUrl)publicPage(publicUrl);else if(new URLSearchParams(location.search).get('demo')==='1'){seedDemo().then(()=>{sessionStorage.setItem('encore-demo','yes');startSession({actor:'demo:you'},true)})}else if(sessionStorage.getItem('encore-demo'))startSession({actor:'demo:you'},true);else render();
 
 window.gtAppLifecycle={activate(){if(state.session)refresh()},beforeLeave(){if(take?.saving)return false;if(take?.recorder?.state==='recording'){if(!window.confirm('Stop the current Sylt recording before switching apps?'))return false;take.recorder.stop();}return true},deactivate(){stopPlayback();document.querySelectorAll('audio,video').forEach(x=>x.pause())},dispose(){endSession();graffiti.dispose?.()}};
