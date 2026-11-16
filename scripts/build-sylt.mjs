@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const sylt = path.join(root, 'sylt');
-const output = path.join(root, 'dist-sylt');
+const output = path.join(root, 'dist-jive');
 
 execFileSync(process.execPath, [
   'node_modules/vite/bin/vite.js', 'build', '--mode', 'standalone',
@@ -17,7 +17,7 @@ for (const license of ['DMSANS-OFL.txt', 'MANROPE-OFL.txt']) {
 }
 const { version } = JSON.parse(await readFile(path.join(sylt, 'package.json'), 'utf8'));
 await writeFile(path.join(output, 'release.json'), JSON.stringify({
-  app: 'sylt',
+  app: 'jive',
   version,
   commit: process.env.CF_PAGES_COMMIT_SHA ||
     execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim(),
@@ -33,8 +33,8 @@ for (const entry of await readdir(output, { recursive: true, withFileTypes: true
   }
   if (entry.name.endsWith('.js') &&
       /\/api\/(session|clips)|127\.0\.0\.1:5178|messageHandlers\??\.gtWorkspace/.test(await readFile(file, 'utf8'))) {
-    throw new Error(`Native dependency in Sylt output: ${entry.name}`);
+    throw new Error(`Native dependency in Jive output: ${entry.name}`);
   }
 }
 if (count > 20000) throw new Error('Pages Free file-count limit exceeded.');
-console.log(`Built standalone Sylt: ${count} files in dist-sylt.`);
+console.log(`Built standalone Jive: ${count} files in dist-jive.`);

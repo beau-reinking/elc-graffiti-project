@@ -50,12 +50,15 @@ struct AppletSession {
             applets = try LibraryStorage.read(from: self.storageURL)
             var changed = false
             for index in applets.indices {
-                for (old, new, name) in [("soundcheck", "yudo", "Yudo"), ("encore", "sylt", "Sylt"), ("music-venues", "ourscene", "OurScene")] {
+                for (old, new, name) in [("soundcheck", "yudo", "Yudo"), ("encore", "sylt", "Jive"), ("music-venues", "ourscene", "OurScene")] {
                     let oldURL = URL(fileURLWithPath: applets[index].folder)
                     let replacement = oldURL.deletingLastPathComponent().appendingPathComponent(new)
                     if oldURL.lastPathComponent == old && FileManager.default.fileExists(atPath: replacement.appendingPathComponent("package.json").path) {
                         applets[index].folder = replacement.path; applets[index].name = name; changed = true
                     }
+                }
+                if applets[index].name == "Sylt", URL(fileURLWithPath: applets[index].folder).lastPathComponent == "sylt" {
+                    applets[index].name = "Jive"; changed = true
                 }
                 if applets[index].id == SuiteConfiguration.id, let current = SuiteConfiguration.applet() { applets[index] = current; changed = true }
             }

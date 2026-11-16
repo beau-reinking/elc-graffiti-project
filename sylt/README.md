@@ -1,4 +1,4 @@
-# Sylt
+# Jive
 
 This app is also available inside **GTGraffitiLauncher** through the shared local workspace. See `../GTGraffitiLauncher/workspace/README.md`. Its original Graffiti namespace is retained for compatibility.
 
@@ -39,11 +39,11 @@ This builds the browser assets and runs a non-root Node server at `http://127.0.
 
 Use HTTPS for remote access: browser microphone/camera capture requires a secure context. Localhost is supported for local testing. See [MDN's recording permission requirements](https://developer.mozilla.org/en-US/docs/Web/API/MediaDevices/getUserMedia#privacy_and_security).
 
-Public recording links use the current server origin automatically. There is no site-wide ChatGPT sign-in gate: public shares are viewable without an Sylt login, while private and friend-only data remain protected by Graffiti's object and media access rules.
+Public recording links use the current server origin automatically. There is no site-wide ChatGPT sign-in gate: public shares are viewable without a Jive login, while private and friend-only data remain protected by Graffiti's object and media access rules.
 
 ## Account and data
 
-Real sign-in uses `@graffiti-garden/implementation-decentralized` and the provider's account flow. Sylt does not collect passwords. All production records and media go through Graffiti. Browser-local demo storage uses IndexedDB and is labeled separately; demo public links are intentionally unavailable.
+Real sign-in uses `@graffiti-garden/implementation-decentralized` and the provider's account flow. Jive does not collect passwords. All production records and media go through Graffiti. Browser-local demo storage uses IndexedDB and is labeled separately; demo public links are intentionally unavailable.
 
 Private practice objects and media explicitly allow only their author. Sharing uploads separate media with a captured friend audience. Public sharing creates another media copy and a public metadata object. Friends-only comments stay separate. Graffiti data objects are immutable: profiles/settings use the latest authored record. Friendship acceptance must be authored by the request target. Removing a friend affects future interactions; earlier shares retain their original audience until removed.
 
@@ -69,21 +69,21 @@ The local Graffiti test package pulls older PouchDB dependencies with moderate a
 
 ## Standalone Cloudflare Pages release
 
-From the repository root, install Sylt’s locked dependencies with
-`npm ci --prefix sylt` and run `npm run build:sylt`. Serve `dist-sylt/` at the
+From the repository root, install Jive’s locked dependencies with
+`npm ci --prefix sylt` and run `npm run build:jive`. Serve `dist-jive/` at the
 site root. Use the Node version in the root `.node-version`.
 
 Create a separate Pages project connected to the existing repository. Set
-`sylt-launch` as its production branch, leave the root directory at the
+`jive-launch` as its production branch, leave the root directory at the
 repository root, set the build command to
-`npm ci --prefix sylt && npm run build:sylt`, and set the output directory
-to `dist-sylt`. Use a branch preview to test the same commit before promoting
+`npm ci --prefix sylt && npm run build:jive`, and set the output directory
+to `dist-jive`. Use a branch preview to test the same commit before promoting
 it. Preview and production share the existing Graffiti data, so use dedicated
 test identities. Sessions and demo data are tied to the browser origin.
 
 Verify the deployed `/release.json` commit, the home and legal pages, the
 404 response, login, permissions, and saving and playing a private recording.
 Check a public share anonymously and a friends share with a second identity.
-If a release regresses, restore the prior successful deployment in the Sylt
+If a release regresses, restore the prior successful deployment in the Jive
 project’s Deployments view. Redeploying the website does not roll back
 Graffiti records.

@@ -14,7 +14,7 @@ enum SuiteConfiguration {
         let ffmpeg = fm.isExecutableFile(atPath: tools.appendingPathComponent("ffmpeg").path) ? tools.appendingPathComponent("ffmpeg").path : "/opt/homebrew/bin/ffmpeg"
         let ffprobe = fm.isExecutableFile(atPath: tools.appendingPathComponent("ffprobe").path) ? tools.appendingPathComponent("ffprobe").path : "/opt/homebrew/bin/ffprobe"
         func quote(_ s: String) -> String { "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'" }
-        return Applet(id: id, name: "GT Graffiti Workspace", summary: "Yudo · Sylt · OurScene", symbol: "music.note.house", folder: folder.path, command: "GT_FFMPEG=\(quote(ffmpeg)) GT_FFPROBE=\(quote(ffprobe)) \(quote(node)) server.mjs", address: "http://127.0.0.1:5178", favorite: true)
+        return Applet(id: id, name: "GT Graffiti Workspace", summary: "Yudo · Jive · OurScene", symbol: "music.note.house", folder: folder.path, command: "GT_FFMPEG=\(quote(ffmpeg)) GT_FFPROBE=\(quote(ffprobe)) \(quote(node)) server.mjs", address: "http://127.0.0.1:5178", favorite: true)
     }
     static func trusted(_ applet: Applet) -> Bool { applet.id == id && applet.folder == Self.applet()?.folder && applet.address == "http://127.0.0.1:5178" }
 }

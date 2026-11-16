@@ -1,4 +1,4 @@
-# Sylt usability and pilot protocol
+# Jive usability and pilot protocol
 
 ## Initial usability sessions
 

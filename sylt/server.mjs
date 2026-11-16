@@ -47,10 +47,10 @@ if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).hr
  const port=Number(process.env.PORT||4173);
  if(!Number.isInteger(port)||port<1||port>65535){console.error('PORT must be an integer from 1 to 65535.');process.exitCode=1}
  else{
-  try{await stat(resolve(defaultRoot,'index.html'))}catch{console.error('Build Sylt first with npm run build.');process.exit(1)}
+  try{await stat(resolve(defaultRoot,'index.html'))}catch{console.error('Build Jive first with npm run build.');process.exit(1)}
   const server=createAppServer();
-  server.on('error',error=>{console.error(`Sylt could not start: ${error.message}`);process.exitCode=1});
-  server.listen(port,host,()=>console.log(`Sylt is running at http://${host}:${port}`));
+  server.on('error',error=>{console.error(`Jive could not start: ${error.message}`);process.exitCode=1});
+  server.listen(port,host,()=>console.log(`Jive is running at http://${host}:${port}`));
   for(const signal of ['SIGINT','SIGTERM'])process.once(signal,()=>server.close(()=>{process.exitCode=0}));
  }
 }
