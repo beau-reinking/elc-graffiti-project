@@ -22,11 +22,12 @@ test('the audio estimate counts audible windows, including a sustained take', ()
   assert.equal(audibleSeconds([], 2), undefined);
 });
 
-test('unsupported upload analysis has a duration-only path', async () => {
+test('unsupported upload analysis uses eighty percent activity', async () => {
   assert.equal(await estimateUploadActivity(new Blob()), undefined);
   const points = practicePoints([take('legacy'), take('invalid', day, { audioActivitySeconds: 'invalid' })], owner);
   assert.equal(points.bySession.get('legacy'), points.bySession.get('invalid'));
-  assert.ok(points.total > 0);
+  assert.equal(points.bySession.get('legacy'), 80);
+  assert.equal(points.total, 160);
 });
 
 test('session awards count activity, length, and consecutive practice days', () => {
@@ -73,4 +74,17 @@ test('likes alter the original award once per eligible person and disappear when
   ], owner).total, liked.total);
   assert.equal(canLike(shared, owner), false);
   assert.equal(canLike(shared, 'outsider'), false);
+});
+
+test('minutes times audible percentage plus three per like matches the requested equation', () => {
+  const original = take('practice', day, { duration: 300, audioActivitySeconds: 240 });
+  const shared = row('share', 'shared', { source: original.url, audience: [owner, 'bob'] });
+  const like = row('like', 'like', { post: shared.url }, 'bob');
+  assert.equal(practicePoints([original, shared, like], owner).total, 403);
+  const earlier = [1, 2, 3].map(days => take('earlier-' + days, day - days * 86400000));
+  assert.equal(practicePoints([...earlier, original, shared, like], owner).bySession.get(original.url), 427);
+  assert.equal(practicePoints([take('long', day, { duration: 3600, audioActivitySeconds: 1800 })], owner).total, 1500);
+  assert.equal(practicePoints([take('unknown', day, { duration: 1800 })], owner).total, 2400);
+  assert.equal(practicePoints([take('silent', day, { audioActivitySeconds: 0 })], owner).total, 1);
+  assert.equal(practicePoints([take('overestimated', day, { audioActivitySeconds: 1000 })], owner).total, 100);
 });

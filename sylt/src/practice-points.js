@@ -1,5 +1,3 @@
-import { MAX_SECONDS } from './domain.js';
-
 const DAY = 24 * 60 * 60 * 1000;
 
 export function canLike(post, actor) {
@@ -48,11 +46,14 @@ export function practicePoints(objects, owner, blocked = []) {
       streak = previousDay === day - 1 ? streak + 1 : 1;
       previousDay = day;
     }
-    const duration = Math.min(MAX_SECONDS, Math.max(0, row.value.duration));
+    const seconds = Math.max(0, row.value.duration);
+    const duration = Math.min(30, seconds / 60);
     const measured = row.value.audioActivitySeconds;
-    const activity = Number.isFinite(measured) ? Math.min(duration, Math.max(0, measured)) : 0;
+    const activity = Number.isFinite(measured) && seconds > 0
+      ? 100 * Math.min(seconds, Math.max(0, measured)) / seconds
+      : 80;
     const multiplier = 1 + 0.02 * Math.min(5, streak - 1);
-    const points = Math.max(1, Math.round((duration / 10 + activity / 5 + 2 * likers.size) * multiplier));
+    const points = Math.max(1, Math.round((duration * activity + 3 * likers.size) * multiplier));
     for (const url of urls) bySession.set(url, points);
     total += points;
   }
