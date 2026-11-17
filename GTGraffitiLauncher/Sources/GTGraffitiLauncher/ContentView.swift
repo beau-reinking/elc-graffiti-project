@@ -56,7 +56,7 @@ struct ContentView: View {
                     Text("Launcher").font(.system(size: 13, weight: .medium)).foregroundStyle(.secondary)
                 }.accessibilityElement(children: .ignore).accessibilityLabel("GT Graffiti Launcher")
             }.padding(.horizontal, 23).padding(.top, 43).padding(.bottom, 30)
-            ForEach([("Home", "house", "home"), ("Yudo", "person.2", "yudo"), ("Jive", "waveform", "sylt"), ("OurScene", "map", "ourscene")], id: \.0) { item in
+            ForEach([("Home", "house", "home"), ("Yudo", "person.2", "yudo"), ("ThisTake", "waveform", "sylt"), ("OurScene", "map", "ourscene")], id: \.0) { item in
                 Button { library.openSuite(item.2) } label: {
                     HStack(spacing: 12) { Image(systemName: item.1).frame(width: 18); Text(item.0); Spacer() }.padding(.horizontal, 12).padding(.vertical, 11)
                 }.buttonStyle(.plain).padding(.horizontal, 12)

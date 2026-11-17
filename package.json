@@ -8,6 +8,7 @@
   },
   "scripts": {
     "setup": "node scripts/install.mjs",
+    "build:thistake": "node scripts/build-sylt.mjs",
     "build:jive": "node scripts/build-sylt.mjs",
     "build:web": "node scripts/build-web.mjs production",
     "build:staging": "node scripts/build-web.mjs staging",

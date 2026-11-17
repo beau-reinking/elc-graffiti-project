@@ -6,7 +6,7 @@ export function createStaticServer(directory){const headerFile=readFile(path.joi
  try{
   if(!['GET','HEAD'].includes(req.method)){res.writeHead(405);res.end();return;}
   const url=new URL(req.url,'http://localhost');let pathname=decodeURIComponent(url.pathname);
-  const alias={soundcheck:'yudo',encore:'sylt',jive:'sylt','music-venues':'ourscene',soundboard:'ourscene'}[pathname.split('/')[1]];
+  const alias={soundcheck:'yudo',encore:'sylt',jive:'sylt',thistake:'sylt','music-venues':'ourscene',soundboard:'ourscene'}[pathname.split('/')[1]];
   if(alias){res.writeHead(302,{Location:`/${alias}/${url.search}`});res.end();return;}
   if(/^\/(yudo|sylt|ourscene)$/.test(pathname)){res.writeHead(301,{Location:pathname+'/'+url.search});res.end();return;}
   const file=path.resolve(directory,'.'+pathname);if(!file.startsWith(path.resolve(directory)+path.sep)&&file!==path.resolve(directory))throw Error('Invalid path');

@@ -1,4 +1,4 @@
-# Jive usability and pilot protocol
+# ThisTake usability and pilot protocol
 
 ## Initial usability sessions
 

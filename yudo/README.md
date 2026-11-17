@@ -3,7 +3,7 @@
 This app is also available inside **GTGraffitiLauncher** through the shared local workspace. See `../GTGraffitiLauncher/workspace/README.md`. Its original Graffiti namespace is retained for compatibility.
 
 
-A mobile-first musician matching app using Graffiti identity, objects, discovery, permissions, and media. Its namespace is `urn:soundcheck:musicians:v1`, separate from Jive.
+A mobile-first musician matching app using Graffiti identity, objects, discovery, permissions, and media. Its namespace is `urn:soundcheck:musicians:v1`, separate from ThisTake.
 
 ## Run
 
