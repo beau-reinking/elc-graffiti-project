@@ -1,7 +1,8 @@
 import { GraffitiDecentralized } from '@graffiti-garden/implementation-decentralized';
+import { installInboxCursorCompatibility } from './inbox-cursor-compat.js';
 import { APP,validRecord } from './domain.js';
 import { GraffitiRepository, RECORD_SCHEMA as schema } from './repository.js';
-export const graffiti = (window.parent!==window?window.parent.gtWorkspace?.createClient({blobConstructor:Blob}):null)||new GraffitiDecentralized();
+export const graffiti = (window.parent!==window?window.parent.gtWorkspace?.createClient({blobConstructor:Blob}):null)||installInboxCursorCompatibility(new GraffitiDecentralized());
 const db = new Promise((resolve,reject)=>{const r=indexedDB.open('encore-demo-v1',1);r.onupgradeneeded=()=>{r.result.createObjectStore('objects',{keyPath:'url'});r.result.createObjectStore('media')};r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error)});
 async function transact(name,mode,fn){const d=await db;return new Promise((resolve,reject)=>{const tx=d.transaction(name,mode);const r=fn(tx.objectStore(name));tx.oncomplete=()=>resolve(r?.result);tx.onerror=()=>reject(tx.error)})}
 export class Repository extends GraffitiRepository {
