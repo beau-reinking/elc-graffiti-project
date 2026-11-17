@@ -39,6 +39,7 @@ export function validRecord(o){
  if(['practice','shared','public'].includes(v.type))return str('media')&&str('title')&&str('mediaType')&&/^(audio|video)\//.test(v.mediaType)&&Number.isFinite(v.duration)&&(!v.caption||str('caption'))&&(v.type!=='shared'||(Array.isArray(v.audience)&&v.audience.every(a=>typeof a==='string')));
  if(['request','unfriend'].includes(v.type))return str('target');
  if(['accept','decline'].includes(v.type))return str('request');
+ if(v.type==='like')return str('post');
  if(v.type==='comment')return str('post')&&str('text')&&v.text.length<=1000;
  if(v.type==='settings')return ['blocked','hidden'].every(k=>v[k]===undefined||(Array.isArray(v[k])&&v[k].every(a=>typeof a==='string')));
  return false;

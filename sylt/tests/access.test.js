@@ -34,6 +34,12 @@ test('private recording, friend snapshot, public copy and deletion enforce acces
  await assert.rejects(()=>api.getMedia(privateMedia,{}));
  const comment=await bob.post('comment',{post:shared.url,text:'Keep going!'},['did:example:alice','did:example:bob']);
  await assert.rejects(()=>api.get(comment.url,{}));
+ const like=await bob.post('like',{post:shared.url},['did:example:bob','did:example:alice']);
+ assert.equal((await alice.get(like.url)).value.post,shared.url);
+ assert.equal((await bob.get(like.url)).actor,'did:example:bob');
+ await assert.rejects(()=>stranger.get(like.url));
+ await assert.rejects(()=>api.get(like.url,{}));
+
  await alice.remove(publicPost.url);await alice.removeMedia(publicMedia);
  await assert.rejects(()=>api.get(publicPost.url,{}));await assert.rejects(()=>api.getMedia(publicMedia,{}));
  assert.equal((await alice.get(entry.url)).url,entry.url);
